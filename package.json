@@ -1,0 +1,44 @@
+{
+  "name": "cmax-arena",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Open-source adversarial arena framework for AI agents",
+  "keywords": [
+    "ai",
+    "agents",
+    "arena",
+    "games",
+    "adversarial",
+    "framework"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wakesync/cmax-arena.git"
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "pnpm -r build",
+    "clean": "pnpm -r clean",
+    "lint": "eslint packages/*/src/**/*.ts",
+    "lint:fix": "eslint packages/*/src/**/*.ts --fix",
+    "format": "prettier --write \"packages/*/src/**/*.ts\"",
+    "format:check": "prettier --check \"packages/*/src/**/*.ts\"",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^20.10.0",
+    "eslint": "^9.39.2",
+    "prettier": "^3.2.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.53.0",
+    "vitest": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "packageManager": "pnpm@9.0.4"
+}
