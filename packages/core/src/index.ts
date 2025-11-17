@@ -1,4 +1,16 @@
 // @cmax/core - CMAX Arena Core Framework
-// Exports will be added as modules are implemented
 
 export const VERSION = "0.1.0";
+
+// RNG
+export { createRng } from "./rng.js";
+export type { Rng } from "./rng.js";
+
+// Crypto
+export {
+  sha256,
+  commitSeed,
+  verifySeed,
+  hashObject,
+  agentFingerprint,
+} from "./crypto.js";
