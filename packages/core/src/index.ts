@@ -50,3 +50,14 @@ export {
   hashObject,
   agentFingerprint,
 } from "./crypto.js";
+
+// Orchestrator
+export type {
+  MatchStartEvent,
+  TurnEvent,
+  MatchEndEvent,
+  MatchEvent,
+  MatchReport,
+  OrchestratorOptions,
+} from "./orchestrator.js";
+export { runMatch, getMatchConfig } from "./orchestrator.js";
