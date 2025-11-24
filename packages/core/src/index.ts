@@ -61,3 +61,14 @@ export type {
   OrchestratorOptions,
 } from "./orchestrator.js";
 export { runMatch, getMatchConfig } from "./orchestrator.js";
+
+// Logging
+export {
+  writeMatchLog,
+  readMatchLog,
+  getDefaultLogPath,
+  extractMatchMeta,
+  extractTurns,
+  createLogWriter,
+  sanitizeString,
+} from "./log.js";
