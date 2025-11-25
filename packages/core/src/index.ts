@@ -72,3 +72,7 @@ export {
   createLogWriter,
   sanitizeString,
 } from "./log.js";
+
+// Replay
+export type { ReplayResult, ReplayErrorType, ReplayError } from "./replay.js";
+export { replayMatch, isValidLogFormat } from "./replay.js";
