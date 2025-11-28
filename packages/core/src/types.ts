@@ -10,16 +10,20 @@ export type PlayerId = number;
 export type MatchId = string;
 
 // JSON-serializable action (game-specific)
-export type Action = string | number | boolean | Record<string, unknown>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Action = any;
 
 // JSON-serializable observation (game-specific)
-export type Observation = Record<string, unknown>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Observation = any;
 
 // JSON-serializable game state (game-specific)
-export type GameState = Record<string, unknown>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type GameState = any;
 
 // Game configuration (game-specific)
-export type GameConfig = Record<string, unknown>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type GameConfig = any;
 
 // Clock information for agents
 export interface Clock {
