@@ -38,6 +38,9 @@ importers:
       '@cmax/core':
         specifier: workspace:*
         version: link:../core
+      '@cmax/games':
+        specifier: workspace:*
+        version: link:../games
     devDependencies:
       tsup:
         specifier: ^8.0.0

@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cmax/core": "workspace:*"
+    "@cmax/core": "workspace:*",
+    "@cmax/games": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
