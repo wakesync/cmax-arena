@@ -3,7 +3,15 @@
  */
 
 import { Command } from "commander";
-import { runMatch, writeMatchLog, getDefaultLogPath, VERSION } from "@cmax/core";
+import {
+  runMatch,
+  writeMatchLog,
+  getDefaultLogPath,
+  readMatchLog,
+  replayMatch,
+  extractMatchMeta,
+  VERSION,
+} from "@cmax/core";
 import { games, listGames, getGame } from "@cmax/games";
 import { agents, listAgents, getAgent } from "@cmax/agents";
 
@@ -96,6 +104,65 @@ runCmd
       }
     } catch (err) {
       console.error("Match failed:", err);
+      process.exit(1);
+    }
+  });
+
+// Replay command
+program
+  .command("replay")
+  .description("Replay and verify a match log")
+  .requiredOption("-l, --log <path>", "Path to the match log file")
+  .option("--verify", "Verify determinism (default: true)", true)
+  .option("--no-verify", "Skip verification")
+  .action((options) => {
+    const logPath = options.log;
+
+    console.log(`Loading log: ${logPath}`);
+
+    try {
+      const events = readMatchLog(logPath);
+      const meta = extractMatchMeta(events);
+
+      if (!meta) {
+        console.error("Invalid log file: missing MATCH_START event");
+        process.exit(1);
+      }
+
+      console.log(`Match ID: ${meta.matchId}`);
+      console.log(`Game: ${meta.gameId} v${meta.gameVersion}`);
+      console.log(`Seed commit: ${meta.seedCommit}`);
+
+      if (meta.seedReveal) {
+        console.log(`Seed reveal: ${meta.seedReveal}`);
+      }
+
+      if (options.verify) {
+        console.log("\nVerifying determinism...");
+
+        const game = getGame(meta.gameId);
+        if (!game) {
+          console.error(`Unknown game: ${meta.gameId}`);
+          console.error("Cannot verify without game definition");
+          process.exit(1);
+        }
+
+        const result = replayMatch(game, events);
+
+        if (result.success) {
+          console.log(`Verified: ${result.turnsVerified}/${result.totalTurns} turns`);
+          console.log("Determinism check: PASSED");
+        } else {
+          console.error("Determinism check: FAILED");
+          console.error(`Errors (${result.errors.length}):`);
+          for (const error of result.errors) {
+            console.error(`  - [${error.type}] ${error.message}`);
+          }
+          process.exit(1);
+        }
+      }
+    } catch (err) {
+      console.error("Replay failed:", err);
       process.exit(1);
     }
   });
