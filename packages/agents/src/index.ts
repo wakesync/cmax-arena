@@ -9,14 +9,20 @@ export type { RandomAgentConfig } from "./random.js";
 // RPS counter agent
 export { rpsCounterAgent } from "./rps-counter.js";
 
+// Kuhn Poker rule agent
+export { kuhnRuleAgent, createKuhnRuleAgent } from "./kuhn-rule.js";
+export type { KuhnRuleConfig } from "./kuhn-rule.js";
+
 // Agent registry
 import { randomAgent } from "./random.js";
 import { rpsCounterAgent } from "./rps-counter.js";
+import { kuhnRuleAgent } from "./kuhn-rule.js";
 import type { Agent } from "@cmax/core";
 
 export const agents: Record<string, Agent> = {
   random: randomAgent,
   rps_counter: rpsCounterAgent,
+  kuhn_rule: kuhnRuleAgent,
 };
 
 export function getAgent(id: string): Agent | undefined {
