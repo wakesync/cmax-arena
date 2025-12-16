@@ -76,3 +76,7 @@ export {
 // Replay
 export type { ReplayResult, ReplayErrorType, ReplayError } from "./replay.js";
 export { replayMatch, isValidLogFormat } from "./replay.js";
+
+// Ratings
+export type { EloConfig, PlayerRating, EloUpdate, EloRatings } from "./ratings.js";
+export { expectedScore, calculateNewRating, createEloRatings } from "./ratings.js";
