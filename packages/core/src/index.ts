@@ -80,3 +80,7 @@ export { replayMatch, isValidLogFormat } from "./replay.js";
 // Ratings
 export type { EloConfig, PlayerRating, EloUpdate, EloRatings } from "./ratings.js";
 export { expectedScore, calculateNewRating, createEloRatings } from "./ratings.js";
+
+// Ladder
+export type { LadderConfig, MatchResult, LadderResult } from "./ladder.js";
+export { runLadder, runMatchups } from "./ladder.js";
