@@ -5,6 +5,7 @@
 import { Command } from "commander";
 import {
   runMatch,
+  runLadder,
   writeMatchLog,
   getDefaultLogPath,
   readMatchLog,
@@ -104,6 +105,98 @@ runCmd
       }
     } catch (err) {
       console.error("Match failed:", err);
+      process.exit(1);
+    }
+  });
+
+// Run ladder
+runCmd
+  .command("ladder")
+  .description("Run a round-robin ladder between agents")
+  .requiredOption("-g, --game <id>", "Game ID (e.g., rps, kuhn_poker)")
+  .requiredOption("-a, --agents <ids>", "Comma-separated agent IDs")
+  .option("-s, --seed <seed>", "Random seed", "ladder-seed")
+  .option("-m, --matches <n>", "Matches per agent pair", "2")
+  .option("-r, --rounds <n>", "Number of rounds for RPS", "10")
+  .option("-k, --k-factor <n>", "Elo K-factor", "32")
+  .action(async (options) => {
+    const gameId = options.game;
+    const game = getGame(gameId);
+
+    if (!game) {
+      console.error(`Unknown game: ${gameId}`);
+      console.error(`Available games: ${listGames().join(", ")}`);
+      process.exit(1);
+    }
+
+    const agentIds = options.agents.split(",").map((s: string) => s.trim());
+    if (agentIds.length < 2) {
+      console.error("Ladder requires at least 2 agents");
+      process.exit(1);
+    }
+
+    const ladderAgents = agentIds.map((id: string) => {
+      const agent = getAgent(id);
+      if (!agent) {
+        console.error(`Unknown agent: ${id}`);
+        console.error(`Available agents: ${listAgents().join(", ")}`);
+        process.exit(1);
+      }
+      return agent;
+    });
+
+    console.log(`Running ${gameId} ladder...`);
+    console.log(`Agents: ${agentIds.join(", ")}`);
+    console.log(`Matches per pair: ${options.matches}`);
+    console.log(`Seed: ${options.seed}`);
+    console.log();
+
+    const gameConfig: Record<string, unknown> = {};
+    if (gameId === "rps") {
+      gameConfig.rounds = parseInt(options.rounds, 10);
+    }
+
+    let matchCount = 0;
+    try {
+      const result = await runLadder(game, ladderAgents, {
+        seed: options.seed,
+        matchesPerPair: parseInt(options.matches, 10),
+        gameConfig,
+        elo: { kFactor: parseInt(options.kFactor, 10) },
+        onMatchComplete: (match) => {
+          matchCount++;
+          const winner = match.winnerId ?? "Draw";
+          console.log(
+            `  Match ${matchCount}: ${match.player1} vs ${match.player2} → ${winner}`
+          );
+        },
+      });
+
+      // Print leaderboard
+      console.log("\n--- Leaderboard ---");
+      console.log();
+
+      let rank = 1;
+      for (const player of result.leaderboard) {
+        const medal =
+          rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : "  ";
+        const winRate =
+          player.matches > 0
+            ? ((player.wins / player.matches) * 100).toFixed(1)
+            : "0.0";
+        console.log(
+          `${medal} #${rank} ${player.playerId.padEnd(15)} ${String(player.rating).padStart(4)} Elo  ${player.wins}W/${player.losses}L/${player.draws}D (${winRate}%)`
+        );
+        rank++;
+      }
+
+      console.log();
+      console.log("--- Stats ---");
+      console.log(`Total matches: ${result.stats.totalMatches}`);
+      console.log(`Total turns: ${result.stats.totalTurns}`);
+      console.log(`Total time: ${result.stats.totalTimeMs.toFixed(2)}ms`);
+    } catch (err) {
+      console.error("Ladder failed:", err);
       process.exit(1);
     }
   });
