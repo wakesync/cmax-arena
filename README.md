@@ -54,8 +54,30 @@ pnpm --filter @cmax/cli start -- replay --log ./logs/<match-id>.jsonl --verify
 
 ```bash
 # Run multiple matches and compute Elo ratings
-pnpm --filter @cmax/cli start -- run ladder --game kuhn_poker --agents random,kuhn_rule --matches 500 --seed "season-1"
+pnpm --filter @cmax/cli start -- run ladder --game kuhn_poker --agents random,kuhn_rule --matches 20 --seed "season-1"
 ```
+
+### Programmatic Usage
+
+```typescript
+import { runMatch, runLadder } from "@cmax/core";
+import { rps, kuhnPoker } from "@cmax/games";
+import { randomAgent, kuhnRuleAgent } from "@cmax/agents";
+
+// Single match
+const report = await runMatch(kuhnPoker, [randomAgent, kuhnRuleAgent], {
+  seed: "my-match",
+});
+console.log(`Winner: Player ${report.results.winner}`);
+
+// Ladder tournament
+const ladder = await runLadder(rps, [randomAgent, counterAgent], {
+  matchesPerPair: 10,
+});
+console.log(`Leaderboard:`, ladder.leaderboard);
+```
+
+See the [examples/](examples/) directory for more usage patterns.
 
 ## Packages
 
