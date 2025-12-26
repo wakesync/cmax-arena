@@ -167,6 +167,18 @@ Simple 2-player game for testing. Configurable number of rounds.
 ### Kuhn Poker
 Classic 2-player poker variant used in game theory research. 3-card deck, one betting round.
 
+### Texas Hold'em
+Full No-Limit Texas Hold'em poker with 2-6 players. Includes:
+- Standard 52-card deck with deterministic shuffle
+- All betting rounds (preflop, flop, turn, river)
+- Complete hand evaluation (high card to royal flush)
+- Side pot support for all-in situations
+
+```bash
+# Run a Texas Hold'em match
+pnpm --filter @cmax/cli start -- run match --game texas_holdem --agents random,random --seed "poker-night"
+```
+
 ## Disclaimer
 
 **This framework does not support real-money gambling.** It is designed for AI research, competitions, and educational purposes only.
