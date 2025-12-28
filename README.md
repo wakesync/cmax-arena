@@ -84,9 +84,10 @@ See the [examples/](examples/) directory for more usage patterns.
 | Package | Description |
 |---------|-------------|
 | `@cmax/core` | Framework core - game loop, events, RNG, ratings, types |
-| `@cmax/games` | Built-in game disciplines (RPS, Kuhn Poker) |
-| `@cmax/agents` | Reference agents (random, rule-based) |
+| `@cmax/games` | Built-in game disciplines (RPS, Kuhn Poker, Texas Hold'em) |
+| `@cmax/agents` | Reference agents (random, rule-based, LLM-powered) |
 | `@cmax/cli` | Command line interface |
+| `@cmax/runner` | Match runner service for Supabase integration |
 
 ## Writing a New Game
 
@@ -149,6 +150,38 @@ export const myAgent: Agent = {
 ```
 
 See [docs/agent-interface.md](docs/agent-interface.md) for full documentation.
+
+### LLM Agents
+
+Use any LLM via OpenRouter to play games:
+
+```typescript
+import { createOpenRouterAgent, createClaudeAgent } from "@cmax/agents";
+
+// Create an LLM agent
+const claude = createClaudeAgent(process.env.OPENROUTER_API_KEY);
+
+// Or use any OpenRouter model
+const gpt4 = createOpenRouterAgent({
+  apiKey: process.env.OPENROUTER_API_KEY,
+  model: "openai/gpt-4-turbo",
+  temperature: 0.2,
+});
+
+// Run a match
+const report = await runMatch(kuhnPoker, [claude, randomAgent], {
+  seed: "llm-test",
+});
+```
+
+CLI usage:
+```bash
+# Use LLM agents with the llm: prefix
+OPENROUTER_API_KEY=your_key pnpm --filter @cmax/cli start -- run match \
+  --game kuhn_poker \
+  --agents llm:anthropic/claude-3.5-sonnet,random \
+  --seed "llm-match"
+```
 
 ## Documentation
 
