@@ -42,12 +42,14 @@ pnpm format
 ```
 cmax-arena/
 ├── packages/
-│   ├── core/      # Framework core
-│   ├── games/     # Game disciplines
-│   ├── agents/    # Reference agents
-│   └── cli/       # Command line interface
+│   ├── core/      # Framework core (game loop, RNG, ratings)
+│   ├── games/     # Game disciplines (RPS, Kuhn Poker, Texas Hold'em)
+│   ├── agents/    # Reference agents (random, rule-based, LLM)
+│   ├── cli/       # Command line interface
+│   └── runner/    # Match runner service (Supabase integration)
 ├── docs/          # Documentation
-└── examples/      # Example scripts
+├── examples/      # Example scripts
+└── logs/          # Match logs (gitignored)
 ```
 
 ## Adding a New Discipline (Game)
@@ -110,6 +112,32 @@ Your agent must implement:
 - Write tests for all new features
 - Include edge cases
 - Test determinism: same seed = same result
+
+#### Running Tests
+
+```bash
+# Run all tests
+pnpm test
+
+# Run tests for a specific package
+pnpm --filter @cmax/core test
+pnpm --filter @cmax/games test
+
+# Watch mode
+pnpm --filter @cmax/core test:watch
+```
+
+#### Determinism Tests
+
+Every game should have determinism tests:
+
+```typescript
+it("should produce same result with same seed", () => {
+  const result1 = runMatch(game, agents, { seed: "test" });
+  const result2 = runMatch(game, agents, { seed: "test" });
+  expect(result1.events).toEqual(result2.events);
+});
+```
 
 ## Pull Request Checklist
 
