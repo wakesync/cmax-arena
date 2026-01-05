@@ -14,7 +14,35 @@ import {
   VERSION,
 } from "@cmax/core";
 import { games, listGames, getGame } from "@cmax/games";
-import { agents, listAgents, getAgent } from "@cmax/agents";
+import { agents, listAgents, getAgent, createOpenRouterAgent } from "@cmax/agents";
+import type { Agent } from "@cmax/core";
+
+/**
+ * Resolve agent ID, supporting both built-in agents and LLM agents
+ * LLM agent format: llm:<model> (e.g., llm:anthropic/claude-3.5-sonnet)
+ * Requires OPENROUTER_API_KEY environment variable
+ */
+function resolveAgent(id: string): Agent | undefined {
+  // Check for LLM agent prefix
+  if (id.startsWith("llm:")) {
+    const model = id.slice(4);
+    const apiKey = process.env.OPENROUTER_API_KEY;
+
+    if (!apiKey) {
+      console.error("Error: OPENROUTER_API_KEY environment variable required for LLM agents");
+      process.exit(1);
+    }
+
+    return createOpenRouterAgent({
+      apiKey,
+      model,
+      temperature: 0.2,
+    });
+  }
+
+  // Built-in agent
+  return getAgent(id);
+}
 
 const program = new Command();
 
@@ -48,17 +76,18 @@ runCmd
 
     const agentIds = options.agents.split(",").map((s: string) => s.trim());
     const matchAgents = agentIds.map((id: string) => {
-      const agent = getAgent(id);
+      const agent = resolveAgent(id);
       if (!agent) {
         console.error(`Unknown agent: ${id}`);
         console.error(`Available agents: ${listAgents().join(", ")}`);
+        console.error(`Or use LLM agents: llm:<model> (e.g., llm:anthropic/claude-3.5-sonnet)`);
         process.exit(1);
       }
       return agent;
     });
 
     console.log(`Running ${gameId} match...`);
-    console.log(`Agents: ${agentIds.join(" vs ")}`);
+    console.log(`Agents: ${matchAgents.map((a: Agent) => a.displayName).join(" vs ")}`);
     console.log(`Seed: ${options.seed}`);
 
     const gameConfig: Record<string, unknown> = {};
@@ -136,17 +165,18 @@ runCmd
     }
 
     const ladderAgents = agentIds.map((id: string) => {
-      const agent = getAgent(id);
+      const agent = resolveAgent(id);
       if (!agent) {
         console.error(`Unknown agent: ${id}`);
         console.error(`Available agents: ${listAgents().join(", ")}`);
+        console.error(`Or use LLM agents: llm:<model> (e.g., llm:anthropic/claude-3.5-sonnet)`);
         process.exit(1);
       }
       return agent;
     });
 
     console.log(`Running ${gameId} ladder...`);
-    console.log(`Agents: ${agentIds.join(", ")}`);
+    console.log(`Agents: ${ladderAgents.map((a: Agent) => a.displayName).join(", ")}`);
     console.log(`Matches per pair: ${options.matches}`);
     console.log(`Seed: ${options.seed}`);
     console.log();

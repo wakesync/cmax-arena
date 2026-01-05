@@ -13,6 +13,16 @@ export { rpsCounterAgent } from "./rps-counter.js";
 export { kuhnRuleAgent, createKuhnRuleAgent } from "./kuhn-rule.js";
 export type { KuhnRuleConfig } from "./kuhn-rule.js";
 
+// OpenRouter LLM agent
+export {
+  createOpenRouterAgent,
+  createClaudeAgent,
+  createGPT4Agent,
+  createLlamaAgent,
+  createMistralAgent,
+} from "./llm-openrouter.js";
+export type { OpenRouterConfig } from "./llm-openrouter.js";
+
 // Agent registry
 import { randomAgent } from "./random.js";
 import { rpsCounterAgent } from "./rps-counter.js";
