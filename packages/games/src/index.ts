@@ -10,15 +10,31 @@ export type { RpsAction, RpsConfig, RpsState, RpsObservation } from "./rps.js";
 export { kuhnPoker } from "./kuhn-poker.js";
 export type { KuhnCard, KuhnAction, KuhnConfig, KuhnState, KuhnObservation } from "./kuhn-poker.js";
 
+// Texas Hold'em
+export { texasHoldem } from "./texas-holdem.js";
+export type {
+  Card,
+  Rank,
+  Suit,
+  HandRank,
+  BettingRound,
+  HoldemAction,
+  HoldemState,
+  HoldemObservation,
+  HoldemConfig,
+} from "./texas-holdem.js";
+
 // Game registry
 import { rps } from "./rps.js";
 import { kuhnPoker } from "./kuhn-poker.js";
+import { texasHoldem } from "./texas-holdem.js";
 import type { GameDefinition } from "@cmax/core";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const games: Record<string, GameDefinition<any, any, any, any>> = {
   rps,
   kuhn_poker: kuhnPoker,
+  texas_holdem: texasHoldem,
 };
 
 export function getGame(id: string): GameDefinition | undefined {
