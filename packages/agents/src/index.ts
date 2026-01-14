@@ -23,6 +23,14 @@ export {
 } from "./llm-openrouter.js";
 export type { OpenRouterConfig } from "./llm-openrouter.js";
 
+// Game-specific LLM prompts
+export {
+  TEXAS_HOLDEM_SYSTEM_PROMPT,
+  formatPokerObservation,
+  parsePokerAction,
+  estimateHandStrength,
+} from "./prompts/texas-holdem.js";
+
 // Agent registry
 import { randomAgent } from "./random.js";
 import { rpsCounterAgent } from "./rps-counter.js";
