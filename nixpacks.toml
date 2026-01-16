@@ -1,0 +1,8 @@
+# Nixpacks configuration for Railway
+# Build all packages in the monorepo before running
+
+[phases.build]
+cmds = ["pnpm build"]
+
+[start]
+cmd = "cd packages/runner && node dist/index.js"
