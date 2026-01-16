@@ -6,5 +6,6 @@ export default defineConfig({
   dts: true,
   clean: true,
   sourcemap: true,
-  external: ["@cmax/core", "@cmax/games", "@cmax/agents"],
+  // Bundle workspace packages so we don't need symlinks at runtime
+  noExternal: ["@cmax/core", "@cmax/games", "@cmax/agents"],
 });
