@@ -23,13 +23,31 @@ export {
 } from "./llm-openrouter.js";
 export type { OpenRouterConfig } from "./llm-openrouter.js";
 
-// Game-specific LLM prompts
+// Webhook agent
+export { createWebhookAgent, checkWebhookHealth } from "./webhook.js";
+
+// Game-specific LLM prompts (all games)
 export {
+  // RPS
+  RPS_SYSTEM_PROMPT,
+  formatRPSObservation,
+  parseRPSAction,
+  analyzeOpponentPattern,
+  // Kuhn Poker
+  KUHN_POKER_SYSTEM_PROMPT,
+  formatKuhnObservation,
+  parseKuhnAction,
+  getNashStrategy,
+  // Texas Hold'em
   TEXAS_HOLDEM_SYSTEM_PROMPT,
   formatPokerObservation,
   parsePokerAction,
   estimateHandStrength,
-} from "./prompts/texas-holdem.js";
+  // Prompt registry
+  GAME_PROMPTS,
+  getGameSystemPrompt,
+} from "./prompts/index.js";
+export type { RPSObservation, KuhnPokerObservation } from "./prompts/index.js";
 
 // Agent registry
 import { randomAgent } from "./random.js";

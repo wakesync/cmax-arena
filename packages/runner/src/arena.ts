@@ -3,6 +3,12 @@
  *
  * Imports games and agents from the monorepo packages
  * and provides a unified interface for running matches.
+ *
+ * Supports multiple agent types:
+ * - local: Built-in agents (random, rule-based)
+ * - llm: LLM agents via OpenRouter
+ * - webhook: External HTTP endpoints
+ * - framework: Agent framework adapters (future)
  */
 
 import { games, getGame } from "@cmax/games";
@@ -10,20 +16,26 @@ import {
   agents,
   getAgent,
   createOpenRouterAgent,
+  createWebhookAgent,
+  getGameSystemPrompt,
 } from "@cmax/agents";
 import {
   runMatch as coreRunMatch,
   type Agent,
   type MatchEvent,
+  type AgentConfiguration,
 } from "@cmax/core";
+
+export interface AgentDefinition {
+  id: string;
+  displayName?: string;
+  kind: string;
+  config: AgentConfiguration;
+}
 
 export interface RunMatchParams {
   gameId: string;
-  agents: Array<{
-    id: string;
-    kind: string;
-    config: Record<string, unknown>;
-  }>;
+  agents: AgentDefinition[];
   seed: string;
   config?: Record<string, unknown>;
   onEvent: (
@@ -42,38 +54,75 @@ export interface MatchResult {
 /**
  * Create an agent instance from database agent definition
  */
-function createAgentInstance(agentDef: {
-  id: string;
-  kind: string;
-  config: Record<string, unknown>;
-}): Agent {
+function createAgentInstance(agentDef: AgentDefinition, gameId: string): Agent {
+  const { id, displayName, kind, config } = agentDef;
+
   // Local built-in agent
-  if (agentDef.kind === "local") {
-    const agent = getAgent(agentDef.id);
+  if (kind === "local") {
+    const agent = getAgent(id);
     if (!agent) {
-      throw new Error(`Unknown local agent: ${agentDef.id}`);
+      throw new Error(`Unknown local agent: ${id}`);
     }
     return agent;
   }
 
   // LLM agent via OpenRouter
-  if (agentDef.kind === "llm") {
+  if (kind === "llm") {
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       throw new Error("OPENROUTER_API_KEY required for LLM agents");
     }
 
-    const model = (agentDef.config.model as string) || "anthropic/claude-3.5-sonnet";
-    const temperature = (agentDef.config.temperature as number) || 0.2;
+    const model = config.modelId || "anthropic/claude-3.5-sonnet";
+    const temperature = config.temperature ?? 0.2;
+    const maxTokens = config.maxTokens ?? 50;
+
+    // Get game-specific system prompt if available
+    let systemPrompt = config.systemPrompt;
+    if (!systemPrompt) {
+      // Check for game-specific prompt in config
+      const gamePrompts = config.gamePrompts;
+      if (gamePrompts && gamePrompts[gameId]?.systemPrompt) {
+        systemPrompt = gamePrompts[gameId].systemPrompt;
+      } else {
+        // Fall back to default game prompt
+        systemPrompt = getGameSystemPrompt(gameId);
+      }
+    }
 
     return createOpenRouterAgent({
       apiKey,
       model,
       temperature,
+      maxTokens,
+      systemPrompt,
     });
   }
 
-  throw new Error(`Unknown agent kind: ${agentDef.kind}`);
+  // Webhook agent - external HTTP endpoint
+  if (kind === "webhook") {
+    if (!config.endpoint) {
+      throw new Error("Webhook agent requires endpoint in config");
+    }
+
+    return createWebhookAgent({
+      id,
+      displayName,
+      endpoint: config.endpoint,
+      authHeader: config.authHeader,
+      authToken: config.authToken,
+      timeoutMs: config.timeoutMs,
+      retries: config.retries,
+      webhookSecret: config.webhookSecret,
+    });
+  }
+
+  // Framework agent - for future use
+  if (kind === "framework") {
+    throw new Error(`Framework agents not yet implemented: ${config.framework}`);
+  }
+
+  throw new Error(`Unknown agent kind: ${kind}`);
 }
 
 /**
@@ -87,8 +136,10 @@ export async function runMatchWithGame(
     throw new Error(`Unknown game: ${params.gameId}`);
   }
 
-  // Create agent instances
-  const matchAgents: Agent[] = params.agents.map(createAgentInstance);
+  // Create agent instances with game context for proper prompts
+  const matchAgents: Agent[] = params.agents.map((agentDef) =>
+    createAgentInstance(agentDef, params.gameId)
+  );
 
   // Track events and log lines
   const logLines: string[] = [];

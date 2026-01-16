@@ -32,6 +32,7 @@ export async function runMatch(job: MatchJob): Promise<void> {
         .sort((a, b) => a.player_id - b.player_id)
         .map((ma) => ({
           id: ma.agent_id,
+          displayName: ma.agents.display_name,
           kind: ma.agents.kind,
           config: ma.agents.config,
         })),

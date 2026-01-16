@@ -108,7 +108,7 @@ export function createOpenRouterAgent(config: OpenRouterConfig): Agent {
     id: `llm_${modelShort.replace(/[^a-z0-9]/gi, "_").toLowerCase()}`,
     version: "1.0.0",
     displayName: `LLM (${modelShort})`,
-    kind: "remote",
+    kind: "llm",
     config: { model },
 
     async decide(input: DecideInput): Promise<DecideOutput> {

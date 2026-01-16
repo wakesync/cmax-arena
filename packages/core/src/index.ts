@@ -21,6 +21,14 @@ export type {
   MatchResults,
   AgentMeta,
   MatchConfig,
+  // Agent configuration types
+  LLMAgentConfig,
+  GamePromptConfig,
+  WebhookAgentConfig,
+  FrameworkAgentConfig,
+  AgentConfiguration,
+  WebhookRequest,
+  WebhookResponse,
 } from "./types.js";
 
 // Game
@@ -35,7 +43,14 @@ export type {
 export { validateNumPlayers, actionEquals, isLegalAction } from "./game.js";
 
 // Agent
-export type { AgentKind, Agent, AgentFactory, AgentRegistry } from "./agent.js";
+export type {
+  AgentKind,
+  TrustLevel,
+  HealthStatus,
+  Agent,
+  AgentFactory,
+  AgentRegistry,
+} from "./agent.js";
 export { createAgentRegistry } from "./agent.js";
 
 // RNG

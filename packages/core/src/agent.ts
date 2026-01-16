@@ -1,11 +1,23 @@
 /**
  * Agent interface for CMAX Arena
+ *
+ * Supports multiple agent types:
+ * - local: Built-in agents running in the same process
+ * - llm: LLM agents via OpenRouter API
+ * - webhook: External HTTP endpoints that receive observations and return actions
+ * - framework: Adapters for agent frameworks (Eliza, LangChain, etc.)
  */
 
 import type { DecideInput, DecideOutput } from "./types.js";
 
-// Agent kind
-export type AgentKind = "local" | "remote";
+// Agent kind - what type of agent this is
+export type AgentKind = "local" | "llm" | "webhook" | "framework";
+
+// Trust level for community agents
+export type TrustLevel = "unverified" | "verified" | "official";
+
+// Health status for remote agents
+export type HealthStatus = "healthy" | "unhealthy" | "timeout" | "unknown";
 
 /**
  * Agent interface - implement this to create an agent
