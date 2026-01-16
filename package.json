@@ -18,6 +18,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "start": "node packages/runner/dist/index.js",
     "build": "pnpm -r build",
     "clean": "pnpm -r clean",
     "lint": "eslint packages/*/src/**/*.ts",
