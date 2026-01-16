@@ -1,0 +1,18 @@
+# Nixpacks configuration for Railway deployment
+# This file configures how Railway builds and runs the runner service
+
+[phases.setup]
+nixPkgs = ["nodejs_22", "corepack"]
+
+[phases.install]
+cmds = [
+  "corepack enable",
+  "corepack prepare pnpm@latest --activate",
+  "cd ../.. && pnpm install --frozen-lockfile"
+]
+
+[phases.build]
+cmds = ["cd ../.. && pnpm build"]
+
+[start]
+cmd = "node dist/index.js"
