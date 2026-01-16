@@ -38,5 +38,3 @@ process.on("SIGINT", () => {
 setInterval(() => {
   // Heartbeat - keep the process running
 }, 60000);
-
-# Railway deploy trigger
