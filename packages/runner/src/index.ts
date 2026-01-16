@@ -11,7 +11,7 @@ import { runMatch } from "./runner.js";
 import { getAvailableGames, getAvailableAgents } from "./arena.js";
 
 console.log("=========================================");
-console.log("     CMAX Match Runner Service");
+console.log("   🏛️  CMAX Arena Match Runner Service");
 console.log("=========================================");
 console.log("");
 console.log("Available games:", getAvailableGames().join(", "));
