@@ -1,7 +1,7 @@
 {
-  "name": "@cmax/games",
+  "name": "@cmax/personality",
   "version": "0.1.0",
-  "description": "Built-in game disciplines for CMAX Arena",
+  "description": "AI personality system for CMAX Arena",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,9 +11,7 @@
       "types": "./dist/index.d.ts"
     }
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "scripts": {
     "build": "tsup",
     "clean": "rm -rf dist",
@@ -22,8 +20,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@cmax/core": "workspace:*",
-    "pokersolver": "^2.1.4"
+    "@cmax/core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.0.0",

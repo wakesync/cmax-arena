@@ -50,7 +50,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^1.2.0
-        version: 1.6.1(@types/node@20.19.30)
+        version: 1.6.1(@types/node@22.19.7)
 
   packages/cli:
     dependencies:
@@ -75,7 +75,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^1.2.0
-        version: 1.6.1(@types/node@20.19.30)
+        version: 1.6.1(@types/node@22.19.7)
 
   packages/core:
     devDependencies:
@@ -87,13 +87,16 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^1.2.0
-        version: 1.6.1(@types/node@20.19.30)
+        version: 1.6.1(@types/node@22.19.7)
 
   packages/games:
     dependencies:
       '@cmax/core':
         specifier: workspace:*
         version: link:../core
+      pokersolver:
+        specifier: ^2.1.4
+        version: 2.1.4
     devDependencies:
       tsup:
         specifier: ^8.0.0
@@ -103,7 +106,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^1.2.0
-        version: 1.6.1(@types/node@20.19.30)
+        version: 1.6.1(@types/node@22.19.7)
 
   packages/runner:
     dependencies:
@@ -1192,6 +1195,10 @@ packages:
 
   pkg-types@1.3.1:
     resolution: {integrity: sha512-/Jm5M4RvtBFVkKWRu2BLUTNP8/M2a+UwuAX+ae4770q1qVGtfjG+WTCupoZixokjmHiry8uI+dlY8KXYV5HVVQ==}
+
+  pokersolver@2.1.4:
+    resolution: {integrity: sha512-vmgZS+K8H8r1RePQykFM5YyvlKo1v3xVec8FMBjg9N6mR2Tj/n/X415w+lG67FWbrk71D/CADmKFinDgaQlAsw==}
+    engines: {'0': node >= 4.0.0}
 
   postcss-load-config@6.0.1:
     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
@@ -2435,6 +2442,8 @@ snapshots:
       confbox: 0.1.8
       mlly: 1.8.0
       pathe: 2.0.3
+
+  pokersolver@2.1.4: {}
 
   postcss-load-config@6.0.1(postcss@8.5.6)(tsx@4.21.0):
     dependencies:

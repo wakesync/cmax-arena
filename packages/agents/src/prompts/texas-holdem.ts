@@ -4,7 +4,7 @@
  * Game-specific prompts for LLM agents playing Texas Hold'em poker.
  */
 
-import type { HoldemObservation, Card } from "@cmax/games";
+import type { TexasHoldemObservation, Card, PositionName } from "@cmax/games";
 
 export const TEXAS_HOLDEM_SYSTEM_PROMPT = `You are an expert poker player competing in a Texas Hold'em tournament. Make optimal decisions based on:
 - Hand strength and potential
@@ -26,23 +26,26 @@ HAND RANKINGS (strongest to weakest):
 10. High Card
 
 POSITION NOTES:
-- Early position: play tight, premium hands only
-- Middle position: slightly wider range
-- Late position: can play more hands, steal blinds
+- Early position (UTG): play tight, premium hands only
+- Middle position (MP): slightly wider range
+- Late position (CO, BTN): can play more hands, steal blinds
 - Button: best position, act last post-flop
+- Blinds (SB, BB): already invested, defend reasonably
 
 BETTING STRATEGY:
 - Value bet with strong hands
 - Bluff selectively with good blockers
 - Consider pot odds when calling
 - Fold weak hands to heavy aggression
+- Size bets appropriately for value/protection
 
 Respond with EXACTLY one of these actions (nothing else):
-- FOLD
-- CHECK
-- CALL
-- RAISE <amount>
-- ALL_IN`;
+- fold
+- check
+- call
+- bet <amount>
+- raise <amount>
+- all_in`;
 
 const SUIT_SYMBOLS: Record<string, string> = {
   h: "\u2665",
@@ -62,80 +65,90 @@ function formatCard(card: Card): string {
  * Format cards array for display
  */
 function formatCards(cards: Card[]): string {
-  if (cards.length === 0) return "None yet";
+  if (!cards || cards.length === 0) return "None yet";
   return cards.map(formatCard).join(" ");
+}
+
+/**
+ * Get position description
+ */
+function getPositionDescription(position: PositionName): string {
+  const descriptions: Record<PositionName, string> = {
+    'BTN': 'Button (best position, act last post-flop)',
+    'SB': 'Small Blind (out of position)',
+    'BB': 'Big Blind (defend your investment)',
+    'UTG': 'Under the Gun (first to act, play tight)',
+    'UTG+1': 'UTG+1 (early position)',
+    'MP': 'Middle Position (balanced range)',
+    'MP+1': 'Middle Position+1',
+    'HJ': 'Hijack (late-middle position)',
+    'CO': 'Cutoff (steal position)',
+  };
+  return descriptions[position] || position;
+}
+
+/**
+ * Calculate pot odds
+ */
+function calculatePotOdds(toCall: number, pot: number): string {
+  if (toCall === 0) return "N/A (no bet to call)";
+  const odds = toCall / (pot + toCall);
+  const percentage = (odds * 100).toFixed(1);
+  const ratio = ((1 / odds) - 1).toFixed(1);
+  return `${percentage}% (need ${percentage}% equity to call profitably, ${ratio}:1)`;
 }
 
 /**
  * Format a Texas Hold'em observation into a prompt for the LLM
  */
-export function formatPokerObservation(obs: HoldemObservation): string {
-  const hand = obs.hand ? formatCards(obs.hand) : "Unknown";
+export function formatPokerObservation(obs: TexasHoldemObservation): string {
+  const hand = obs.holeCards ? formatCards(obs.holeCards) : "Unknown";
   const community = formatCards(obs.communityCards);
+  const toCall = obs.currentBetToCall - obs.currentBet;
 
   const opponents = obs.opponents
     .map((o) => {
       let status = "";
-      if (o.folded) status = " (folded)";
-      else if (o.allIn) status = " (all-in)";
-      return `  - Player ${o.playerId}: ${o.chips} chips, bet ${o.bet}${status}`;
+      if (o.status === 'folded') status = " (folded)";
+      else if (o.status === 'all_in') status = " (all-in)";
+      return `  - ${o.position}: ${o.chips} chips, bet ${o.currentBet}${status}`;
     })
     .join("\n");
 
-  let actions = "FOLD";
-  if (obs.toCall === 0) {
-    actions += ", CHECK";
-  } else {
-    actions += `, CALL (${obs.toCall})`;
-  }
-  actions += `, RAISE (min: ${obs.minRaise})`;
-  actions += ", ALL_IN";
+  // Build legal actions string
+  const legalActionsStr = obs.legalActions
+    .map(la => {
+      if (la.type === 'bet' || la.type === 'raise') {
+        return `${la.type} (min: ${la.minAmount}, max: ${la.maxAmount})`;
+      }
+      return la.type;
+    })
+    .join(", ");
+
+  const potOdds = calculatePotOdds(toCall, obs.pot);
+  const spr = obs.chips / obs.pot;
 
   return `CURRENT SITUATION:
 - Your hand: ${hand}
 - Community cards: ${community}
+- Street: ${obs.street.toUpperCase()}
 - Pot: ${obs.pot} chips
-- Your chips: ${obs.myChips}
-- Your current bet: ${obs.myBet}
-- Amount to call: ${obs.toCall}
-- Minimum raise: ${obs.minRaise}
-- Betting round: ${obs.round.toUpperCase()}
-- Your position: ${getPositionDescription(obs)}
+- Your chips: ${obs.chips}
+- Your current bet: ${obs.currentBet}
+- Amount to call: ${toCall}
+- Minimum raise to: ${obs.minRaise}
+- Your position: ${getPositionDescription(obs.position)}
+
+STRATEGY METRICS:
+- Pot odds: ${potOdds}
+- Stack-to-Pot Ratio (SPR): ${spr.toFixed(1)}
 
 OPPONENTS:
-${opponents}
+${opponents || "  None active"}
 
-LEGAL ACTIONS: ${actions}
+LEGAL ACTIONS: ${legalActionsStr}
 
 Choose your action:`;
-}
-
-/**
- * Get position description based on dealer button
- */
-function getPositionDescription(obs: HoldemObservation): string {
-  const numPlayers = obs.opponents.length + 1;
-  const relativePosition = (obs.playerId - obs.dealerIndex + numPlayers) % numPlayers;
-
-  if (numPlayers === 2) {
-    return relativePosition === 0 ? "Button/Small Blind" : "Big Blind";
-  }
-
-  switch (relativePosition) {
-    case 0:
-      return "Button (BTN)";
-    case 1:
-      return "Small Blind (SB)";
-    case 2:
-      return "Big Blind (BB)";
-    case 3:
-      return "Under the Gun (UTG)";
-    default:
-      if (relativePosition >= numPlayers - 2) {
-        return "Late Position (CO/HJ)";
-      }
-      return "Middle Position (MP)";
-  }
 }
 
 /**
@@ -143,38 +156,71 @@ function getPositionDescription(obs: HoldemObservation): string {
  */
 export function parsePokerAction(
   response: string,
-  obs: HoldemObservation
-): string {
-  const normalized = response.trim().toUpperCase();
+  legalActions: { type: string; minAmount?: number; maxAmount?: number }[]
+): { type: string; amount?: number } {
+  const normalized = response.trim().toLowerCase();
 
   // Check for simple actions
-  if (normalized === "FOLD") return "fold";
-  if (normalized === "CHECK") return "check";
-  if (normalized === "CALL") return "call";
-  if (normalized === "ALL_IN" || normalized === "ALLIN" || normalized === "ALL-IN") {
-    return "all_in";
+  if (normalized === "fold") return { type: 'fold' };
+  if (normalized === "check") return { type: 'check' };
+  if (normalized === "call") return { type: 'call' };
+  if (normalized === "all_in" || normalized === "allin" || normalized === "all-in") {
+    return { type: 'all_in' };
   }
 
-  // Parse RAISE <amount>
-  const raiseMatch = normalized.match(/RAISE\s*(\d+)/);
+  // Parse bet <amount>
+  const betMatch = normalized.match(/bet\s*(\d+)/);
+  if (betMatch) {
+    const amount = parseInt(betMatch[1], 10);
+    const betAction = legalActions.find(a => a.type === 'bet');
+    if (betAction) {
+      const clampedAmount = Math.min(
+        Math.max(amount, betAction.minAmount || 0),
+        betAction.maxAmount || Infinity
+      );
+      return { type: 'bet', amount: clampedAmount };
+    }
+  }
+
+  // Parse raise <amount>
+  const raiseMatch = normalized.match(/raise\s*(\d+)/);
   if (raiseMatch) {
     const amount = parseInt(raiseMatch[1], 10);
-    const clampedAmount = Math.max(amount, obs.minRaise);
-    return `raise_${clampedAmount}`;
+    const raiseAction = legalActions.find(a => a.type === 'raise');
+    if (raiseAction) {
+      const clampedAmount = Math.min(
+        Math.max(amount, raiseAction.minAmount || 0),
+        raiseAction.maxAmount || Infinity
+      );
+      return { type: 'raise', amount: clampedAmount };
+    }
   }
 
-  // If just "RAISE" without amount, use minimum
-  if (normalized.startsWith("RAISE")) {
-    return `raise_${obs.minRaise}`;
+  // If just "bet" or "raise" without amount, use minimum
+  if (normalized.startsWith("bet")) {
+    const betAction = legalActions.find(a => a.type === 'bet');
+    if (betAction) {
+      return { type: 'bet', amount: betAction.minAmount };
+    }
+  }
+  if (normalized.startsWith("raise")) {
+    const raiseAction = legalActions.find(a => a.type === 'raise');
+    if (raiseAction) {
+      return { type: 'raise', amount: raiseAction.minAmount };
+    }
   }
 
-  // Default to fold if unparseable
-  console.warn(`Could not parse poker action: "${response}", defaulting to fold`);
-  return "fold";
+  // Default to first legal action if unparseable
+  console.warn(`Could not parse poker action: "${response}", using first legal action`);
+  const firstAction = legalActions[0];
+  if (firstAction.type === 'bet' || firstAction.type === 'raise') {
+    return { type: firstAction.type, amount: firstAction.minAmount };
+  }
+  return { type: firstAction.type };
 }
 
 /**
- * Estimate hand strength (simplified)
+ * Estimate hand strength (simplified pre-flop evaluation)
  */
 export function estimateHandStrength(
   hand: [Card, Card],
@@ -192,34 +238,41 @@ export function estimateHandStrength(
     const lowRank = Math.min(rankValue1, rankValue2);
     const gap = highRank - lowRank;
 
-    // Premium pairs
-    if (isPair && highRank >= 10) return "Premium (high pair)";
-    if (isPair && highRank >= 7) return "Strong (medium pair)";
-    if (isPair) return "Playable (low pair)";
+    // Premium pairs (JJ+)
+    if (isPair && highRank >= 9) return "Premium (high pair: JJ+)";
+    // Medium pairs (77-TT)
+    if (isPair && highRank >= 5) return "Strong (medium pair: 77-TT)";
+    // Low pairs (22-66)
+    if (isPair) return "Speculative (low pair: 22-66)";
 
-    // Big cards
+    // Big cards (AK, AQ, KQ)
     if (highRank >= 11 && lowRank >= 10) {
-      return isSuited ? "Premium (big suited)" : "Strong (big cards)";
-    }
-
-    // Suited connectors
-    if (isSuited && gap <= 2 && lowRank >= 6) {
-      return "Playable (suited connector)";
+      return isSuited ? "Premium (big suited: AKs, AQs, KQs)" : "Strong (big offsuit: AKo, AQo)";
     }
 
     // Suited aces
     if (isSuited && (c1.rank === "A" || c2.rank === "A")) {
-      return "Playable (suited ace)";
+      return lowRank >= 8 ? "Strong (suited broadway ace)" : "Speculative (suited ace)";
     }
 
-    // High cards
+    // Suited connectors
+    if (isSuited && gap <= 2 && lowRank >= 5) {
+      return "Speculative (suited connector)";
+    }
+
+    // Broadway cards
     if (highRank >= 10 && lowRank >= 8) {
-      return "Marginal (high cards)";
+      return isSuited ? "Playable (suited broadway)" : "Marginal (offsuit broadway)";
+    }
+
+    // High card combos
+    if (highRank === 12) { // Ace
+      return lowRank >= 8 ? "Marginal (ace with kicker)" : "Weak (weak ace)";
     }
 
     return "Weak (fold candidate)";
   }
 
-  // Post-flop - simplified
-  return "Evaluate based on board texture";
+  // Post-flop - would need full hand evaluation
+  return "Evaluate based on board texture and hand strength";
 }
